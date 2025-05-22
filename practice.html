@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>题目练习系统</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .question {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .options {
+            margin-top: 10px;
+        }
+        .option {
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+        .option:hover {
+            background-color: #f0f0f0;
+        }
+        .selected {
+            background-color: #e3f2fd;
+            border-color: #2196f3;
+        }
+        .controls {
+            margin: 20px 0;
+            text-align: center;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 0 10px;
+            border: none;
+            border-radius: 4px;
+            background-color: #2196f3;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #1976d2;
+        }
+        .stats {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+        .correct {
+            color: #4caf50;
+        }
+        .incorrect {
+            color: #f44336;
+        }
+        .question-type {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+        }
+        .explanation {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            display: none;
+        }
+        .true-false-options {
+            display: flex;
+            gap: 20px;
+            margin-top: 15px;
+        }
+        .true-false-option {
+            padding: 10px 30px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            background-color: white;
+        }
+        .true-false-option:hover {
+            background-color: #f0f0f0;
+        }
+        .true-false-option.selected {
+            background-color: #e3f2fd;
+            border-color: #2196f3;
+        }
+        .short-answer-input {
+            width: 100%;
+            min-height: 150px;
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: inherit;
+            resize: vertical;
+        }
+        .keywords {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+        .keyword {
+            display: inline-block;
+            margin: 5px;
+            padding: 5px 10px;
+            background-color: #e3f2fd;
+            border-radius: 4px;
+            color: #1976d2;
+        }
+        .score {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>题目练习系统</h1>
+        <div class="controls">
+            <button onclick="loadRandomQuestion()">随机抽取题目</button>
+            <button onclick="checkAnswer()">提交答案</button>
+        </div>
+        <div id="questionContainer" class="question">
+            <p>点击"随机抽取题目"开始练习</p>
+        </div>
+        <div class="stats">
+            <h3>练习统计</h3>
+            <p>总题数：<span id="totalQuestions">0</span></p>
+            <p>正确数：<span id="correctAnswers">0</span></p>
+            <p>正确率：<span id="accuracy">0%</span></p>
+        </div>
+    </div>
+    <script src="jianda.js"></script>
+    <script>
+        // 题目数据
+        const questions = [
+            {
+                id: 1,
+                type: "single",
+                question: "我国把私人资本主义企业改造成为社会主义性质企业所采取的形式是_____。",
+                options: [
+                    "国营经济",
+                    "合资经济",
+                    "国家资本主义经济",
+                    "合作社经济"
+                ],
+                answer: "C"
+            },
+            {
+                id: 2,
+                type: "single",
+                question: "我国对个体手工业社会主义改造由低级向高级的过渡性经济组织形式是_____",
+                options: [
+                    "供销合作社、生产合作小组、生产合作社",
+                    "生产合作社、生产合作小组、供销合作社",
+                    "生产合作小组、生产合作社、供销合作社",
+                    "生产合作小组、供销合作社、生产合作社"
+                ],
+                answer: "D"
+            },
+            {
+                id: 3,
+                type: "single",
+                question: "下列不属于《关于经济体制改革的决定》内容的是_____。",
+                options: [
+                    "突破了把计划经济同商品经济对立起来的传统观点",
+                    "增强企业活力是经济体制改革的中心环节",
+                    "进行全面金融体制改革",
+                    "建立多种形式的责任制"
+                ],
+                answer: "C"
+            },
+            {
+                id: 4,
+                type: "single",
+                question: "下列不属于中共党史军史上三大起义的是_____。",
+                options: [
+                    "南昌起义",
+                    "秋收起义",
+                    "平江起义",
+                    "广州起义"
+                ],
+                answer: "C"
+            },
+            {
+                id: 5,
+                type: "single",
+                question: "新民主主义革命阶段,\"中国人民\"所包容的阶级阶层最广泛的是_____时期。",
+                options: [
+                    "北伐战争",
+                    "十年内战",
+                    "抗日战争",
+                    "解放战争"
+                ],
+                answer: "C"
+            },
+            {
+                id: 6,
+                type: "single",
+                question: "新民主主义社会在经济上具有_____的特点。",
+                options: [
+                    "独立性",
+                    "短暂性",
+                    "过渡性",
+                    "长期性"
+                ],
+                answer: "C"
+            },
+            {
+                id: 7,
+                type: "single",
+                question: "改革开放新时期以来农村产业结构发生重大变化的标志是_____。",
+                options: [
+                    "家庭联产承包责任制的实行",
+                    "农村改革深入发展",
+                    "乡镇企业异军突起",
+                    "农村剩余劳动力流向城市"
+                ],
+                answer: "C"
+            },
+            {
+                id: 8,
+                type: "single",
+                question: "改革开放新时期最显著的成就是 _____。",
+                options: [
+                    "改革开放",
+                    "与时俱进",
+                    "快速发展",
+                    "以经济建设为中心"
+                ],
+                answer: "C"
+            },
+            {
+                id: 9,
+                type: "single",
+                question: "延安整风运动,其主要内容不包括_____。",
+                options: [
+                    "反对主观主义以整顿学风",
+                    "反对宗派主义以整顿党风",
+                    "反对党八股以整顿文风",
+                    "反对军阀主义以整顿军风"
+                ],
+                answer: "D"
+            },
+            {
+                id: 10,
+                type: "single",
+                question: "要尊崇党章，严格执行新形势下党内政治生活若干准则，增强党内政治生活的_____。",
+                options: [
+                    "政治性、时代性、原则性、战斗性",
+                    "思想性、政治性、时代性、原则性",
+                    "政治性、思想性、时代性、原则性",
+                    "政治性、思想性、时代性、战斗性"
+                ],
+                answer: "A"
+            },
+            {
+                id: 11,
+                type: "single",
+                question: "一个国家要实现经济社会又好又快发展,必须找到一条_____的发展道路。",
+                options: [
+                    "既重视效益,又重视数量",
+                    "既吸收传统,又借鉴他国",
+                    "既适合自己国情,又符合时代要求",
+                    "既重视数量,又重视效益"
+                ],
+                answer: "C"
+            },
+            {
+                id: 12,
+                type: "single",
+                question: "以_____为主要代表的中国共产党人选择农村包围城市、武装夺取政权的革命道路，完全是从中国的实际出发的。",
+                options: [
+                    "瞿秋白",
+                    "毛泽东",
+                    "周恩来",
+                    "李立三"
+                ],
+                answer: "B"
+            },
+            {
+                id: 13,
+                type: "single",
+                question: "原中国农村问题研究中心主任徐勇说,农村改革的这 30 年,分成三个阶段。第一阶段: 1978-1988 年的黄金十年……第二阶段: 1988-2002 年的曲折十五年……第三阶段: 2003-2007年的历史跨越五年……与三个阶段相对应的关键词是_____。",
+                options: [
+                    "\"乡镇企业\"\"民工潮\"\"新农村建设\"",
+                    "\"新农村建设\"\"乡镇企业\"\"民工潮\"",
+                    "\"民工潮\"\"新农村建设\" \"乡镇企业\"",
+                    "\"乡镇企业\"\"新农村建设\"\"民工潮\""
+                ],
+                answer: "A"
+            },
+            {
+                id: 14,
+                type: "single",
+                question: "_____，中国共产党早期公开领导工人运动的领导机关——中国劳动组合书记部在上海成立。",
+                options: [
+                    "1921年 8月 11日",
+                    "1921年 8 月 12 日",
+                    "1922年 8 月 11 日",
+                    "1922 年 8 月 12 日"
+                ],
+                answer: "A"
+            },
+            {
+                id: 15,
+                type: "single",
+                question: "______提出建设有中国特色的社会主义，针对新时期工人阶级构成情况，提出必须加强党在工会中的工作，使工会成为联结党和工人群众的强大纽带。",
+                options: [
+                    "党的十一大",
+                    "党的十二大",
+                    "党的十三大",
+                    "党的十四大"
+                ],
+                answer: "B"
+            },
+            {
+                id: 16,
+                type: "single",
+                question: "1922 年 1 月 12 日至 3 月 8 日爆发的______，是中国工人阶级第一次直接和帝国主义进行针锋相对的斗争，也是中国共产党领导工人运动掀起第一次高潮的起点。",
+                options: [
+                    "香港海员大罢工",
+                    "京汉铁路大罢工",
+                    "省港工人大罢工",
+                    "安源路矿工人大罢工"
+                ],
+                answer: "A"
+            },
+            {
+                id: 17,
+                type: "single",
+                question: "1925 年 5 月 15 日，日本资本家枪杀共产党员、上海内外棉厂工人______，打伤工人十多人，激起了工人的强烈愤怒。",
+                options: [
+                    "林祥谦",
+                    "顾正红",
+                    "施洋",
+                    "刘华"
+                ],
+                answer: "B"
+            },
+            {
+                id: 18,
+                type: "single",
+                question: "1927年 8 月，全国总工会发表了______，号召全国工人赶快团结起来，进行不屈不挠的英勇抵抗。",
+                options: [
+                    "《八一革命宣言》",
+                    "《全国工人抗争总动员令》",
+                    "《维护工农权益宣言》",
+                    "《反抗压迫工人工会的宣言》"
+                ],
+                answer: "D"
+            },
+            {
+                id: 19,
+                type: "single",
+                question: "1938年广州沦陷后，以香港海员工人为主的______，由开始的几十人迅速增加至上千人，成为中国共产党领导下的一支著名地方抗日武装。",
+                options: [
+                    "海员游击队",
+                    "东江抗日游击队",
+                    "港九大队",
+                    "惠宝人民抗日游击总队"
+                ],
+                answer: "A"
+            },
+            {
+                id: 20,
+                type: "single",
+                question: "1939年5月，中共中央苏区明确沦陷区地下党斗争要坚持______、______、______、______十六字方针。",
+                options: [
+                    "隐蔽精干、长期埋伏、积蓄力量、以待时机",
+                    "保存实力、深入渗透、发动群众、适时反攻",
+                    "坚持抗战、巩固团结、力求进步、反对倒退",
+                    "秘密行动、单线联系、伺机破坏、扩大影响"
+                ],
+                answer: "A"
+            }
+        ];
+
+        const duoxuanQuestions = [
+            {
+                id: 1,
+                type: "multiple",
+                question: "1925年5月，在党的领导下，第二次全国劳动大会召开，宣布成立中华全国总工会，标志着中国工人运动和工会组织在______与______上的统一。",
+                options: ["A. 政治", "B. 思想", "C. 组织", "D. 理论"],
+                answer: ["A", "C"]
+            },
+            {
+                id: 2,
+                type: "multiple",
+                question: "工会十四大以来，党领导中国工会立足历史方位的变化，深入探索研究新的历史条件下工会工作的特点和规律，形成了中国特色社会主义工会发展道路，确立了______的工作方针，树立了______的工会维权观，明确了______的企业工会工作原则。",
+                options: [
+                    "A. 组织起来、切实维权",
+                    "B. 以职工为本，主动依法科学维权",
+                    "C. 促进企业发展、维护职工权益",
+                    "D. 维护工人权益，强化基层建设"
+                ],
+                answer: ["A", "B", "C"]
+            },
+            {
+                id: 3,
+                type: "multiple",
+                question: "为支援上海人民五卅反帝爱国运动，______与______在广州和香港领导发起了规模宏大的省港大罢工。",
+                options: ["A. 邓中夏", "B. 苏兆征", "C. 陈延年", "D. 李启汉"],
+                answer: ["A", "B"]
+            },
+            {
+                id: 4,
+                type: "multiple",
+                question: "武汉沦陷后，抗战进入相持阶段。中国共产党调整国统区工运方针，在\"有理、有利、有节\"的斗争原则下，利用国民党一切可以利用的法律、命令和社会习惯所许可的范围，通过______、______、______，争取工人阶级的政治经济权益，稳扎稳打地进行斗争和积蓄力量。",
+                options: ["A. 合法的组织", "B. 合法的手段", "C. 合法的程序", "D. 合法的渠道"],
+                answer: ["A", "C", "D"]
+            },
+            {
+                id: 5,
+                type: "multiple",
+                question: "中国共产党第十五次全国代表大会回答了改革开放和现代化建设发展的一系列重大理论和实践问题，从______、______、______为中国的跨世纪发展提供了根本保证，同时也为中国工人运动和工会工作在推动国家跨世纪发展中发挥作用以及自身的跨世纪发展指明了方向。",
+                options: ["A. 思想上", "B. 政治上", "C. 组织上", "D. 理论上"],
+                answer: ["A", "B", "C"]
+            },
+            {
+                id: 6,
+                type: "multiple",
+                question: "中国工会自觉接受党的领导是我国______、______和______等明确规定的。",
+                options: ["A. 宪法", "B. 工会法", "C. 劳动法", "D. 工会章程"],
+                answer: ["A", "B", "D"]
+            },
+            {
+                id: 7,
+                type: "multiple",
+                question: "1949年5月2日至11日，全国总工会在天津召开华北第一届职工代表会议，提出将战时工业转化为平时工业的途径和方法，对国营企业的______、______、______和______等问题提出指导性意见。",
+                options: ["A. 生产计划", "B. 工厂民主化管理", "C. 工资待遇", "D. 工会组织", "E. 劳动纪律"],
+                answer: ["A", "B", "C", "D"]
+            },
+            {
+                id: 8,
+                type: "multiple",
+                question: "为实现国家工业化和巩固人民民主政权，党中央和全国总工会确定了新中国工人运动的方针，即______、______。",
+                options: [
+                    "A. 在政治上必须坚决支持、拥护和捍卫各级人民政权",
+                    "B. 在经济上应坚决贯彻和执行\"发展生产、繁荣经济、公私兼顾、劳资两利\"的总方针",
+                    "C. 在组织上坚持党对工会的绝对领导与工人自主管理相结合",
+                    "D. 在管理上推行工人直接选举工厂管理层和工会干部"
+                ],
+                answer: ["A", "B"]
+            },
+            {
+                id: 9,
+                type: "multiple",
+                question: "1951年底和1952年初，全国开展了大规模的______、______运动，各地工会抽调大批干部、工人、店员积极分子，组成工作队，发动职工检举、揭发不法资本家的______行为，与国家机关中的腐化退变分子进行坚决斗争，为此后对私营工商业进行社会主义改造创造了条件。",
+                options: ["A. 三反", "B. 五反", "C. 五毒", "D. 偷工减料"],
+                answer: ["A", "B", "C"]
+            },
+            {
+                id: 10,
+                type: "multiple",
+                question: "中国工会第八次全国代表大会通过了______、______、______和______等决议。",
+                options: [
+                    "A. 《关于中国工会工作报告的决议》",
+                    "B. 《关于动员职工支援农业合作化的决议》",
+                    "C. 《关于修改中国工会章程的报告》",
+                    "D. 《中国工会章程》",
+                    "E. 《关于工会财务工作报告的决议》"
+                ],
+                answer: ["A", "C", "D", "E"]
+            },
+            {
+                id: 11,
+                type: "multiple",
+                question: "全国总工会第十二届二次执委会议上审议通过了《全国总工会关于贯彻实施<劳动法>的决定》，提出新时期工会工作总体思路。各地工会在工会工作总体思路的指导下，形成了______、______、______、______等一批先进典型经验。",
+                options: ["A. 深圳蛇口工业区", "B. 深圳宝安区", "C. 辽宁葫芦岛", "D. 吉林梨树", "E. 山东青岛"],
+                answer: ["A", "B", "C", "D"]
+            },
+            {
+                id: 12,
+                type: "multiple",
+                question: "2015年11月9日，习近平总书记主持召开中央全面深化改革领导小组第十八次会议，审议通过______、______、______。",
+                options: [
+                    "A. 《全国总工会改革试点方案》",
+                    "B. 上海市群团改革试点方案",
+                    "C. 重庆市群团改革试点方案",
+                    "D. 《关于加强和改进党的群团工作的意见》"
+                ],
+                answer: ["A", "B", "C"]
+            },
+            {
+                id: 13,
+                type: "multiple",
+                question: "2011年8月15日至16日，全国总工会、人力资源部和社会保障部、全国工商联、中国企业联合会、中央宣传部联合在北京举行全国构建和谐劳动关系先进表彰暨经验交流会。这次会议是改革开放以来第一次______、______的研究部署构建和谐劳动关系的工作会议，对于进一步做好新形势下的劳动关系协调工作具有里程碑意义。",
+                options: ["A. 全国性", "B. 国际化", "C. 跨部门", "D. 高规格"],
+                answer: ["A", "D"]
+            },
+            {
+                id: 14,
+                type: "multiple",
+                question: "新民主主义社会中社会主义因素处于领导地位，保证了新民主主义向社会主义的转变，这主要是______、______、______。",
+                options: [
+                    "A. 经济上五种经济成分并存的经济制度",
+                    "B. 文化上无产阶级思想的指导地位",
+                    "C. 政治上工人阶级的领导地位",
+                    "D. 经济上国营经济和合作社经济的主导地位"
+                ],
+                answer: ["B", "C", "D"]
+            },
+            {
+                id: 15,
+                type: "multiple",
+                question: "新三民主义包含联俄、联共、扶助农工的三大政策和______、______的纲领，是第一次国内革命战争时期中国工厂当同国民党合作的政治基础。",
+                options: ["A. 反对帝国主义", "B. 反对资本主义", "C. 反对封建主义", "D. 反对旧民主主义"],
+                answer: ["A", "C"]
+            },
+            {
+                id: 16,
+                type: "multiple",
+                question: "在《论十大关系》中,毛泽东提出了发展重工业的两种办法：______、______。",
+                options: [
+                    "A. 一种是少发展一些农业、轻工业",
+                    "B. 一种是多发展一些农业、轻工业",
+                    "C. 一种是只发展重工业",
+                    "D. 一种是以发展农业、轻工业来促进重工业的发展"
+                ],
+                answer: ["A", "B"]
+            },
+            {
+                id: 17,
+                type: "multiple",
+                question: "在1927年大革命失败以后，国民党的性质发生转变，它代表______和______的利益。",
+                options: ["A. 地主阶级", "B. 工人阶级", "C. 民族资产阶级", "D. 买办性的大资产阶级"],
+                answer: ["A", "D"]
+            },
+            {
+                id: 18,
+                type: "multiple",
+                question: "在对资本主义工商业的社会主义改造过程中,国家资本主义的高级形式有______、______。",
+                options: ["A. 全行业公私合营", "B. 个别企业的公私合营", "C. 股份制", "D. 公司制"],
+                answer: ["A", "B"]
+            },
+            {
+                id: 19,
+                type: "multiple",
+                question: "在实现农业合作化的过程中,中国共产党采取循序渐进的步骤采用的形式依次为______、______、______。",
+                options: ["A. 农业生产互助组", "B. 变工队", "C. 初级农业合作社", "D. 高级农业合作社"],
+                answer: ["A", "C", "D"]
+            },
+            {
+                id: 20,
+                type: "multiple",
+                question: "中共在过渡时期的总路线和总任务是：",
+                options: [
+                    "A. 实现对资本主义工商业的社会主义改造",
+                    "B. 实现对农业的社会主义改造",
+                    "C. 实现对手工业的社会主义改造",
+                    "D. 逐步实现国家的社会主义工业化"
+                ],
+                answer: ["A", "B", "C", "D"]
+            }
+        ];
+
+        let currentQuestion = null;
+        let selectedAnswers = new Set();
+        let stats = {
+            total: 0,
+            correct: 0
+        };
+
+        // Combine all question types
+        const allQuestions = [
+            ...questions,
+            ...duoxuanQuestions,
+            ...jiandaQuestions
+        ];
+
+        function loadRandomQuestion() {
+            const randomIndex = Math.floor(Math.random() * allQuestions.length);
+            currentQuestion = allQuestions[randomIndex];
+            selectedAnswers.clear();
+            
+            const questionContainer = document.getElementById('questionContainer');
+            
+            if (currentQuestion.type === 'judgment') {
+                questionContainer.innerHTML = `
+                    <div class="question-type">判断题</div>
+                    <p>${currentQuestion.question}</p>
+                    <div class="true-false-options">
+                        <div class="true-false-option" onclick="toggleTrueFalse(true)">正确</div>
+                        <div class="true-false-option" onclick="toggleTrueFalse(false)">错误</div>
+                    </div>
+                    <div class="explanation" id="explanation"></div>
+                `;
+            } else if (currentQuestion.type === 'short_answer') {
+                questionContainer.innerHTML = `
+                    <div class="question-type">简答题</div>
+                    <p>${currentQuestion.question}</p>
+                    <textarea class="short-answer-input" id="shortAnswerInput" placeholder="请在此输入你的答案..."></textarea>
+                    <div class="explanation" id="explanation"></div>
+                `;
+            } else {
+                questionContainer.innerHTML = `
+                    <div class="question-type">${currentQuestion.type === 'single' ? '单选题' : '多选题'}</div>
+                    <p>${currentQuestion.question}</p>
+                    <div class="options">
+                        ${currentQuestion.options.map((option, index) => `
+                            <div class="option" onclick="toggleOption(${index})">
+                                ${String.fromCharCode(65 + index)}. ${option}
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="explanation" id="explanation"></div>
+                `;
+            }
+        }
+
+        function toggleTrueFalse(value) {
+            const options = document.querySelectorAll('.true-false-option');
+            options.forEach(opt => opt.classList.remove('selected'));
+            if (value) {
+                options[0].classList.add('selected');
+            } else {
+                options[1].classList.add('selected');
+            }
+            selectedAnswers.clear();
+            selectedAnswers.add(value);
+        }
+
+        function toggleOption(index) {
+            const option = document.querySelectorAll('.option')[index];
+            if (currentQuestion.type === 'single') {
+                // 单选题：清除其他选项，只保留当前选项
+                document.querySelectorAll('.option').forEach(opt => opt.classList.remove('selected'));
+                option.classList.add('selected');
+                selectedAnswers.clear();
+                selectedAnswers.add(index);
+            } else {
+                // 多选题：切换当前选项的选中状态
+                option.classList.toggle('selected');
+                if (selectedAnswers.has(index)) {
+                    selectedAnswers.delete(index);
+                } else {
+                    selectedAnswers.add(index);
+                }
+            }
+        }
+
+        function checkAnswer() {
+            if (!currentQuestion) return;
+
+            const explanation = document.getElementById('explanation');
+            explanation.style.display = 'block';
+
+            let isCorrect = false;
+            let score = 0;
+
+            if (currentQuestion.type === 'short_answer') {
+                const userAnswer = document.getElementById('shortAnswerInput').value.trim();
+                const keywords = currentQuestion.keywords;
+                let matchedKeywords = 0;
+
+                keywords.forEach(keyword => {
+                    if (userAnswer.includes(keyword)) {
+                        matchedKeywords++;
+                    }
+                });
+
+                score = Math.round((matchedKeywords / keywords.length) * 100);
+                isCorrect = score >= 60; // 60分以上视为正确
+
+                explanation.innerHTML = `
+                    <div class="score">得分：${score}分</div>
+                    <p>参考答案：${currentQuestion.answer}</p>
+                    <div class="keywords">
+                        <p>关键词：</p>
+                        ${keywords.map(keyword => `<span class="keyword">${keyword}</span>`).join('')}
+                    </div>
+                `;
+            } else if (currentQuestion.type === 'judgment') {
+                const selectedValue = Array.from(selectedAnswers)[0];
+                isCorrect = selectedValue === currentQuestion.answer;
+            } else if (currentQuestion.type === 'single') {
+                const selectedIndex = Array.from(selectedAnswers)[0];
+                const correctIndex = currentQuestion.answer.charCodeAt(0) - 65;
+                isCorrect = selectedIndex === correctIndex;
+            } else {
+                const selectedOptions = Array.from(selectedAnswers).map(index => String.fromCharCode(65 + index));
+                isCorrect = arraysEqual(selectedOptions.sort(), currentQuestion.answer.sort());
+            }
+
+            stats.total++;
+            if (isCorrect) {
+                stats.correct++;
+                explanation.innerHTML = `<p class="correct">回答正确！</p>`;
+            } else {
+                if (currentQuestion.type === 'judgment') {
+                    explanation.innerHTML = `<p class="incorrect">回答错误！</p><p>正确答案：${currentQuestion.answer ? '正确' : '错误'}</p>`;
+                } else {
+                    explanation.innerHTML = `<p class="incorrect">回答错误！</p><p>正确答案：${currentQuestion.type === 'single' ? 
+                        currentQuestion.options[currentQuestion.answer.charCodeAt(0) - 65] : 
+                        currentQuestion.answer.map(ans => currentQuestion.options[ans.charCodeAt(0) - 65]).join('、')}</p>`;
+                }
+            }
+
+            updateStats();
+        }
+
+        function arraysEqual(a, b) {
+            if (a.length !== b.length) return false;
+            return a.every((val, index) => val === b[index]);
+        }
+
+        function updateStats() {
+            document.getElementById('totalQuestions').textContent = stats.total;
+            document.getElementById('correctAnswers').textContent = stats.correct;
+            document.getElementById('accuracy').textContent = 
+                stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) + '%' : '0%';
+        }
+    </script>
+</body>
+</html> 
